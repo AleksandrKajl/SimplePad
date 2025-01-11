@@ -12,6 +12,10 @@ MOC_DIR += .
 OBJECTS_DIR += debug
 UI_DIR += .
 RCC_DIR += .
+QT += core\
+      gui\
+      widgets\
+      printsupport
 TRANSLATIONS += simplepad_ru.ts
 HEADERS += ./FileSys.h \
     ./HotKeys.h \

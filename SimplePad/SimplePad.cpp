@@ -46,25 +46,46 @@ SimplePad::SimplePad(QWidget *parent)
 
 void SimplePad::saveFile()
 {
-    FileSys fs;
+    const QString filePath = QFileDialog::getSaveFileName(this, tr("Save file"),
+        QDir::currentPath(), tr("Text file (*.txt);;All files (*.*)"));
+    if (filePath.isEmpty())
+        return;
 
-    fs.saveFile(ui.textEdit->toPlainText());
+    QString errorMessage;
+    if (!FileSys::writeTextFile(filePath, ui.textEdit->toPlainText(), errorMessage))
+        QMessageBox::warning(this, tr("Save file"), tr("Could not save the file: %1").arg(errorMessage));
 
 }
 
 void SimplePad::openFile()
 {
-    FileSys fs;
+    const QString filePath = QFileDialog::getOpenFileName(this, tr("Open file"),
+        QDir::currentPath(), tr("Text file (*.txt);;All files (*.*)"));
+    if (filePath.isEmpty())
+        return;
 
-    ui.textEdit->setPlainText(fs.openFile());
+    QString text;
+    QString errorMessage;
+    if (!FileSys::readTextFile(filePath, text, errorMessage))
+    {
+        QMessageBox::warning(this, tr("Open file"), tr("Could not open the file: %1").arg(errorMessage));
+        return;
+    }
 
+    ui.textEdit->setPlainText(text);
 }
 
 void SimplePad::info()
 {
-    FileSys fs;
+    QString text;
+    QString errorMessage;
+    if (!FileSys::readTextFile(":/Resource/info.txt", text, errorMessage))
+    {
+        QMessageBox::warning(this, tr("Info"), tr("Could not load information: %1").arg(errorMessage));
+        return;
+    }
 
-    QMessageBox::information(nullptr, tr("Info"), fs.loadFile(":/Resource/info.txt"));
+    QMessageBox::information(this, tr("Info"), text);
 
 }
 
@@ -113,9 +134,15 @@ void SimplePad::lightTheme()
 
 void SimplePad::darkTheme()
 {
-    FileSys fs;
+    QString styleSheet;
+    QString errorMessage;
+    if (!FileSys::readTextFile(":/Resource/dark.qss", styleSheet, errorMessage))
+    {
+        QMessageBox::warning(this, tr("Dark theme"), tr("Could not load the theme: %1").arg(errorMessage));
+        return;
+    }
 
-    this->setStyleSheet(fs.loadFile(":/Resource/dark.qss"));
+    setStyleSheet(styleSheet);
 }
 
 Ui::SimplePadClass& SimplePad::getUi()
@@ -139,20 +166,14 @@ void SimplePad::openFolder()
 
 void SimplePad::selectItem(const QModelIndex &index)
 {
-    QString str = model->filePath(index);
-
-    if (str.length() > 0)
+    const QString filePath = model->filePath(index);
+    QString text;
+    QString errorMessage;
+    if (!FileSys::readTextFile(filePath, text, errorMessage))
     {
-        if (!str.isEmpty())
-        {
-            QFile file(str);
-            if (file.open(QFile::ReadOnly | QFile::ExistingOnly))
-            {
-                QTextStream stream(&file);
-                ui.textEdit->setPlainText(stream.readAll());
-                file.close();
-            }
-        }
+        QMessageBox::warning(this, tr("Open file"), tr("Could not open the file: %1").arg(errorMessage));
+        return;
     }
-}
 
+    ui.textEdit->setPlainText(text);
+}

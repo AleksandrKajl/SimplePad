@@ -1,17 +1,9 @@
 #pragma once
-#include<QMainWindow>
-#include<QDir>
 
-class FileSys : public QMainWindow
+#include <QString>
+
+namespace FileSys
 {
-public:
-	FileSys();
-	~FileSys();
-
-	QString openFile();
-	void saveFile(QString txt);
-	QString loadFile(QString str);
-
-private:
-	QFile* file;
-};
+bool readTextFile(const QString &filePath, QString &text, QString &errorMessage);
+bool writeTextFile(const QString &filePath, const QString &text, QString &errorMessage);
+}

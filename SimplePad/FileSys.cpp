@@ -1,59 +1,47 @@
-#include"FileSys.h"
-#include<QFileDialog>
+#include "FileSys.h"
 
-FileSys::FileSys() 
-    : file(new QFile)
+#include <QFile>
+#include <QTextStream>
+
+bool FileSys::readTextFile(const QString &filePath, QString &text, QString &errorMessage)
 {
-}
-
-FileSys::~FileSys()
-{
-    file->close();
-    delete file;
-}
-
-QString FileSys::openFile()
-{
-    QString str = QFileDialog::getOpenFileName(this, "Open file",
-        QDir::currentPath(), "Text file(*.txt);; All(*.*)");
-
-    if (!str.isEmpty())
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        file->setFileName(str);
-        if (file->open(QFile::ReadOnly | QFile::ExistingOnly))
-        {
-            QTextStream stream(file);
-            return stream.readAll();
-        }
+        errorMessage = file.errorString();
+        return false;
     }
 
-    return nullptr;
-}
-
-void FileSys::saveFile(QString txt)
-{
-    QString str = QFileDialog::getSaveFileName(this, tr("Save file"),
-        QDir::currentPath(), tr("Text file(*.txt);; All(*.*)"));
-
-    if (!str.isEmpty())
+    QTextStream stream(&file);
+    text = stream.readAll();
+    if (stream.status() != QTextStream::Ok)
     {
-        if (str.endsWith(".txt"))
-        {
-            file->setFileName(str);
-            if (file->open(QFile::WriteOnly))
-            {
-                QTextStream stream(file);
-                stream << txt;
-            }
-        }
+        errorMessage = file.errorString();
+        return false;
     }
+
+    errorMessage.clear();
+    return true;
 }
 
-QString FileSys::loadFile(QString str)
+bool FileSys::writeTextFile(const QString &filePath, const QString &text, QString &errorMessage)
 {
-    file->setFileName(str);
-    if (file->open(QFile::ReadOnly | QFile::ExistingOnly))
-        str = file->readAll();
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+    {
+        errorMessage = file.errorString();
+        return false;
+    }
 
-    return str;
+    QTextStream stream(&file);
+    stream << text;
+    stream.flush();
+    if (stream.status() != QTextStream::Ok)
+    {
+        errorMessage = file.errorString();
+        return false;
+    }
+
+    errorMessage.clear();
+    return true;
 }

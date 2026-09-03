@@ -1,5 +1,6 @@
 #include "SimplePad.h"
 #include<QDir>
+#include<QFileInfo>
 #include<QTextStream>
 #include"FileSys.h"
 #include"HotKeys.h"
@@ -18,6 +19,7 @@ SimplePad::SimplePad(QWidget *parent)
     ui.gridLayout_2->addWidget(treeView.get());
     treeView->hide();
 
+    ui.mainToolBar->addAction(QIcon(":/Resource/Newfile.png"), tr("New"), this, SLOT(newFile()));
     ui.mainToolBar->addAction(QIcon(":/Resource/open-file.png"), tr("Open"), this, SLOT(openFile()));
     ui.mainToolBar->addAction(QIcon(":/Resource/save.png"), tr("Save"), this, SLOT(saveFile()));
     ui.mainToolBar->addAction(QIcon(":/Resource/print.png"), tr("Print"), this, SLOT(doPrint()));
@@ -27,8 +29,10 @@ SimplePad::SimplePad(QWidget *parent)
     ui.mainToolBar->addAction(QIcon(":/Resource/right.png"), tr("Alignment center"), this, [&] {ui.textEdit->setAlignment(Qt::AlignRight); });
 
 
+    connect(ui.action_New, SIGNAL(triggered()), SLOT(newFile()));
     connect(ui.action_Open_File, SIGNAL(triggered()), SLOT(openFile()));
     connect(ui.action_Save, SIGNAL(triggered()), SLOT(saveFile()));
+    connect(ui.action_Save_As, SIGNAL(triggered()), SLOT(saveFileAs()));
     connect(ui.actionEnglish, SIGNAL(triggered()), SLOT(enLanguage()));
     connect(ui.action_Russian, SIGNAL(triggered()), SLOT(ruLanguage()));
     connect(ui.action_About_SimplePad, SIGNAL(triggered()), SLOT(info()));
@@ -37,24 +41,34 @@ SimplePad::SimplePad(QWidget *parent)
     connect(ui.actionOpe_n_folder_as_project, SIGNAL(triggered()), SLOT(openFolder()));
     connect(treeView.get(), SIGNAL(doubleClicked(const QModelIndex &)), SLOT(selectItem(const QModelIndex &)));
     connect(ui.action_Print, SIGNAL(triggered()), SLOT(doPrint()));
+    connect(ui.textEdit->document(), &QTextDocument::modificationChanged,
+        this, [this] { updateWindowTitle(); });
 
 //Установка русской локализации по умолчанию
     ruLanguage();
     lightTheme();
+    setCurrentFile(QString());
 
+}
+
+void SimplePad::newFile()
+{
+    if (!maybeSave())
+        return;
+
+    ui.textEdit->clear();
+    setCurrentFile(QString());
+    ui.textEdit->document()->setModified(false);
 }
 
 void SimplePad::saveFile()
 {
-    const QString filePath = QFileDialog::getSaveFileName(this, tr("Save file"),
-        QDir::currentPath(), tr("Text file (*.txt);;All files (*.*)"));
-    if (filePath.isEmpty())
-        return;
+    saveDocument();
+}
 
-    QString errorMessage;
-    if (!FileSys::writeTextFile(filePath, ui.textEdit->toPlainText(), errorMessage))
-        QMessageBox::warning(this, tr("Save file"), tr("Could not save the file: %1").arg(errorMessage));
-
+void SimplePad::saveFileAs()
+{
+    saveDocumentAs();
 }
 
 void SimplePad::openFile()
@@ -64,15 +78,97 @@ void SimplePad::openFile()
     if (filePath.isEmpty())
         return;
 
+    if (!maybeSave())
+        return;
+
+    loadDocument(filePath);
+}
+
+bool SimplePad::maybeSave()
+{
+    if (!ui.textEdit->document()->isModified())
+        return true;
+
+    const QMessageBox::StandardButton answer = QMessageBox::warning(this, tr("SimplePad"),
+        tr("The document has been modified. Do you want to save your changes?"),
+        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+    if (answer == QMessageBox::Save)
+        return saveDocument();
+
+    return answer == QMessageBox::Discard;
+}
+
+bool SimplePad::loadDocument(const QString &filePath)
+{
     QString text;
     QString errorMessage;
     if (!FileSys::readTextFile(filePath, text, errorMessage))
     {
         QMessageBox::warning(this, tr("Open file"), tr("Could not open the file: %1").arg(errorMessage));
-        return;
+        return false;
     }
 
     ui.textEdit->setPlainText(text);
+    setCurrentFile(filePath);
+    ui.textEdit->document()->setModified(false);
+    return true;
+}
+
+bool SimplePad::saveDocument()
+{
+    if (currentFilePath_.isEmpty())
+        return saveDocumentAs();
+
+    return saveDocumentTo(currentFilePath_);
+}
+
+bool SimplePad::saveDocumentAs()
+{
+    const QString initialPath = currentFilePath_.isEmpty() ? QDir::currentPath() : currentFilePath_;
+    const QString filePath = QFileDialog::getSaveFileName(this, tr("Save file"), initialPath,
+        tr("Text file (*.txt);;All files (*.*)"));
+    if (filePath.isEmpty())
+        return false;
+
+    return saveDocumentTo(filePath);
+}
+
+bool SimplePad::saveDocumentTo(const QString &filePath)
+{
+    QString errorMessage;
+    if (!FileSys::writeTextFile(filePath, ui.textEdit->toPlainText(), errorMessage))
+    {
+        QMessageBox::warning(this, tr("Save file"), tr("Could not save the file: %1").arg(errorMessage));
+        return false;
+    }
+
+    setCurrentFile(filePath);
+    ui.textEdit->document()->setModified(false);
+    return true;
+}
+
+void SimplePad::setCurrentFile(const QString &filePath)
+{
+    currentFilePath_ = filePath;
+    updateWindowTitle();
+}
+
+void SimplePad::updateWindowTitle()
+{
+    QString fileName = currentFilePath_.isEmpty() ? tr("Untitled") : QFileInfo(currentFilePath_).fileName();
+    if (ui.textEdit->document()->isModified())
+        fileName += "*";
+
+    setWindowTitle(tr("%1 - SimplePad").arg(fileName));
+}
+
+void SimplePad::closeEvent(QCloseEvent *event)
+{
+    if (maybeSave())
+        event->accept();
+    else
+        event->ignore();
 }
 
 void SimplePad::info()
@@ -118,6 +214,7 @@ void SimplePad::ruLanguage()
     translator.load("./simplepad_ru");
     qApp->installTranslator(&translator);
     ui.retranslateUi(this);
+    updateWindowTitle();
 }
 
 void SimplePad::enLanguage()
@@ -125,6 +222,7 @@ void SimplePad::enLanguage()
     translator.load("./simplepad_en");
     qApp->installTranslator(&translator);
     ui.retranslateUi(this);
+    updateWindowTitle();
 }
 
 void SimplePad::lightTheme()
@@ -167,13 +265,8 @@ void SimplePad::openFolder()
 void SimplePad::selectItem(const QModelIndex &index)
 {
     const QString filePath = model->filePath(index);
-    QString text;
-    QString errorMessage;
-    if (!FileSys::readTextFile(filePath, text, errorMessage))
-    {
-        QMessageBox::warning(this, tr("Open file"), tr("Could not open the file: %1").arg(errorMessage));
+    if (!maybeSave())
         return;
-    }
 
-    ui.textEdit->setPlainText(text);
+    loadDocument(filePath);
 }

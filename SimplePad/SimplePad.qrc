@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>Resource/Newfile.png</file>
         <file>Resource/info.png</file>
         <file>Resource/info.txt</file>
         <file>Resource/open-file.png</file>

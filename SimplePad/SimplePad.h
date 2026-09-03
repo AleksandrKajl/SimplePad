@@ -12,7 +12,6 @@ class SimplePad : public QMainWindow
 
 public:
     SimplePad(QWidget *parent = Q_NULLPTR);
-    Ui::SimplePadClass& getUi();
 
 private:
     bool maybeSave();
@@ -51,5 +50,4 @@ public slots:
     
 protected:
     void closeEvent(QCloseEvent *event) override;
-    void keyPressEvent(QKeyEvent* pe) override;
 };

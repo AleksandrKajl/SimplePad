@@ -68,6 +68,8 @@
     <addaction name="action_Save_As"/>
     <addaction name="action_Print"/>
     <addaction name="actionOpe_n_folder_as_project"/>
+    <addaction name="separator"/>
+    <addaction name="action_Exit"/>
    </widget>
    <widget class="QMenu" name="menu_Interface">
     <property name="title">
@@ -117,6 +119,9 @@
    <property name="text">
     <string>&amp;New</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
   </action>
   <action name="action_Open_File">
    <property name="icon">
@@ -125,6 +130,9 @@
    </property>
    <property name="text">
     <string>&amp;Open file</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionO_pen_file_Read_only">
@@ -145,10 +153,24 @@
    <property name="text">
     <string>&amp;Save</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
   </action>
   <action name="action_Save_As">
    <property name="text">
     <string>Save &amp;As</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="action_Exit">
+   <property name="text">
+    <string>E&amp;xit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
    </property>
   </action>
   <action name="actionEnglish">
@@ -192,6 +214,9 @@
    </property>
    <property name="text">
     <string>&amp;Print</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
    </property>
   </action>
   <action name="actionTest_Font">

@@ -16,8 +16,6 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets PrintSupport)
 add_executable(SimplePad WIN32
     SimplePad/FileSys.cpp
     SimplePad/FileSys.h
-    SimplePad/HotKeys.cpp
-    SimplePad/HotKeys.h
     SimplePad/SimplePad.cpp
     SimplePad/SimplePad.h
     SimplePad/SimplePad.qrc

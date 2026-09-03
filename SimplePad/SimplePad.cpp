@@ -1,9 +1,7 @@
 #include "SimplePad.h"
 #include<QDir>
 #include<QFileInfo>
-#include<QTextStream>
 #include"FileSys.h"
-#include"HotKeys.h"
 
 #pragma warning(disable : 4834)
 
@@ -19,10 +17,10 @@ SimplePad::SimplePad(QWidget *parent)
     ui.gridLayout_2->addWidget(treeView.get());
     treeView->hide();
 
-    ui.mainToolBar->addAction(QIcon(":/Resource/Newfile.png"), tr("New"), this, SLOT(newFile()));
-    ui.mainToolBar->addAction(QIcon(":/Resource/open-file.png"), tr("Open"), this, SLOT(openFile()));
-    ui.mainToolBar->addAction(QIcon(":/Resource/save.png"), tr("Save"), this, SLOT(saveFile()));
-    ui.mainToolBar->addAction(QIcon(":/Resource/print.png"), tr("Print"), this, SLOT(doPrint()));
+    ui.mainToolBar->addAction(ui.action_New);
+    ui.mainToolBar->addAction(ui.action_Open_File);
+    ui.mainToolBar->addAction(ui.action_Save);
+    ui.mainToolBar->addAction(ui.action_Print);
     ui.mainToolBar->addAction(QIcon(":/Resource/font.png"), tr("Font edit"), this, SLOT(setFont()));
     ui.mainToolBar->addAction(QIcon(":/Resource/left.png"), tr("Alignment left"), this, [&] {ui.textEdit->setAlignment(Qt::AlignLeft); });
     ui.mainToolBar->addAction(QIcon(":/Resource/centr.png"), tr("Alignment center"), this, [&] {ui.textEdit->setAlignment(Qt::AlignCenter); });
@@ -33,6 +31,7 @@ SimplePad::SimplePad(QWidget *parent)
     connect(ui.action_Open_File, SIGNAL(triggered()), SLOT(openFile()));
     connect(ui.action_Save, SIGNAL(triggered()), SLOT(saveFile()));
     connect(ui.action_Save_As, SIGNAL(triggered()), SLOT(saveFileAs()));
+    connect(ui.action_Exit, &QAction::triggered, this, &QWidget::close);
     connect(ui.actionEnglish, SIGNAL(triggered()), SLOT(enLanguage()));
     connect(ui.action_Russian, SIGNAL(triggered()), SLOT(ruLanguage()));
     connect(ui.action_About_SimplePad, SIGNAL(triggered()), SLOT(info()));
@@ -185,15 +184,6 @@ void SimplePad::info()
 
 }
 
-void SimplePad::keyPressEvent(QKeyEvent* pe)
-{
-    HotKeys hK;
-
-    if(hK.keysProcessing(this, pe))
-        QWidget::keyPressEvent(pe);
-
-}
-
 void SimplePad::setFont()
 {
     ui.textEdit->setFont(QFontDialog::getFont(0, ui.textEdit->font()));
@@ -241,11 +231,6 @@ void SimplePad::darkTheme()
     }
 
     setStyleSheet(styleSheet);
-}
-
-Ui::SimplePadClass& SimplePad::getUi()
-{
-    return ui;
 }
 
 void SimplePad::openFolder()

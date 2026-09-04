@@ -21,10 +21,13 @@ SimplePad::SimplePad(QWidget *parent)
     ui.mainToolBar->addAction(ui.action_Open_File);
     ui.mainToolBar->addAction(ui.action_Save);
     ui.mainToolBar->addAction(ui.action_Print);
-    ui.mainToolBar->addAction(QIcon(":/Resource/font.png"), tr("Font edit"), this, SLOT(setFont()));
-    ui.mainToolBar->addAction(QIcon(":/Resource/left.png"), tr("Alignment left"), this, [&] {ui.textEdit->setAlignment(Qt::AlignLeft); });
-    ui.mainToolBar->addAction(QIcon(":/Resource/centr.png"), tr("Alignment center"), this, [&] {ui.textEdit->setAlignment(Qt::AlignCenter); });
-    ui.mainToolBar->addAction(QIcon(":/Resource/right.png"), tr("Alignment center"), this, [&] {ui.textEdit->setAlignment(Qt::AlignRight); });
+    fontAction_ = ui.mainToolBar->addAction(QIcon(":/Resource/font.png"), QString(), this, SLOT(setFont()));
+    alignLeftAction_ = ui.mainToolBar->addAction(QIcon(":/Resource/left.png"), QString(),
+        this, [&] {ui.textEdit->setAlignment(Qt::AlignLeft); });
+    alignCenterAction_ = ui.mainToolBar->addAction(QIcon(":/Resource/centr.png"), QString(),
+        this, [&] {ui.textEdit->setAlignment(Qt::AlignCenter); });
+    alignRightAction_ = ui.mainToolBar->addAction(QIcon(":/Resource/right.png"), QString(),
+        this, [&] {ui.textEdit->setAlignment(Qt::AlignRight); });
 
 
     connect(ui.action_New, SIGNAL(triggered()), SLOT(newFile()));
@@ -162,6 +165,16 @@ void SimplePad::updateWindowTitle()
     setWindowTitle(tr("%1 - SimplePad").arg(fileName));
 }
 
+void SimplePad::updateInterfaceText()
+{
+    ui.retranslateUi(this);
+    fontAction_->setText(tr("Font edit"));
+    alignLeftAction_->setText(tr("Alignment left"));
+    alignCenterAction_->setText(tr("Alignment center"));
+    alignRightAction_->setText(tr("Alignment right"));
+    updateWindowTitle();
+}
+
 void SimplePad::closeEvent(QCloseEvent *event)
 {
     if (maybeSave())
@@ -201,18 +214,22 @@ void SimplePad::doPrint()
 
 void SimplePad::ruLanguage()
 {
-    translator.load("./simplepad_ru");
+    qApp->removeTranslator(&translator);
+    if (!translator.load(":/translations/simplepad_ru.qm"))
+    {
+        updateInterfaceText();
+        QMessageBox::warning(this, tr("Language"), tr("Could not load Russian translation."));
+        return;
+    }
+
     qApp->installTranslator(&translator);
-    ui.retranslateUi(this);
-    updateWindowTitle();
+    updateInterfaceText();
 }
 
 void SimplePad::enLanguage()
 {
-    translator.load("./simplepad_en");
-    qApp->installTranslator(&translator);
-    ui.retranslateUi(this);
-    updateWindowTitle();
+    qApp->removeTranslator(&translator);
+    updateInterfaceText();
 }
 
 void SimplePad::lightTheme()

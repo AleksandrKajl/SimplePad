@@ -21,6 +21,8 @@ add_executable(SimplePad WIN32
     SimplePad/SimplePad.qrc
     SimplePad/SimplePad.ui
     SimplePad/main.cpp
+    SimplePad/simplepad_ru.qm
+    SimplePad/simplepad_ru.ts
 )
 
 target_link_libraries(SimplePad PRIVATE

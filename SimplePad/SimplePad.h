@@ -20,6 +20,7 @@ private:
     bool saveDocumentAs();
     bool saveDocumentTo(const QString &filePath);
     void setCurrentFile(const QString &filePath);
+    void updateInterfaceText();
     void updateWindowTitle();
 
     Ui::SimplePadClass ui;
@@ -27,6 +28,10 @@ private:
 
     QTranslator translator;
     QStyle *style = nullptr;
+    QAction *fontAction_ = nullptr;
+    QAction *alignLeftAction_ = nullptr;
+    QAction *alignCenterAction_ = nullptr;
+    QAction *alignRightAction_ = nullptr;
 
     std::unique_ptr<QTreeView> treeView;
     std::unique_ptr<QFileSystemModel> model;

@@ -13,4 +13,7 @@
         <file>Resource/left.png</file>
         <file>Resource/right.png</file>
     </qresource>
+    <qresource prefix="/translations">
+        <file>simplepad_ru.qm</file>
+    </qresource>
 </RCC>

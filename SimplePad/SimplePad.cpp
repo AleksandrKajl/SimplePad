@@ -235,9 +235,12 @@ void SimplePad::darkTheme()
 
 void SimplePad::openFolder()
 {
-    QString str = QFileDialog::getExistingDirectory(this, tr("Select folder"), "", QFileDialog::ShowDirsOnly);
-    model->setRootPath(QDir::currentPath());
-    treeView->setRootIndex(model->index(str));
+    const QString folderPath = QFileDialog::getExistingDirectory(this, tr("Select folder"),
+        QDir::currentPath(), QFileDialog::ShowDirsOnly);
+    if (folderPath.isEmpty())
+        return;
+
+    treeView->setRootIndex(model->setRootPath(folderPath));
 
     for (int i = 1; i < model->columnCount(); ++i)
         treeView->hideColumn(i);
@@ -249,9 +252,11 @@ void SimplePad::openFolder()
 
 void SimplePad::selectItem(const QModelIndex &index)
 {
-    const QString filePath = model->filePath(index);
+    if (!index.isValid() || !model->fileInfo(index).isFile())
+        return;
+
     if (!maybeSave())
         return;
 
-    loadDocument(filePath);
+    loadDocument(model->filePath(index));
 }
